@@ -223,7 +223,7 @@ class WC_Postmates
     public function debug($message, $type = 'notice')
     {
 
-        if ($this->settings['debug'] && !is_admin()) {
+        if ($this->settings['debug'] == 'yes' && !is_admin()) {
             wc_add_notice($message, $type);
         }
 
@@ -231,7 +231,7 @@ class WC_Postmates
             $this->logger = new WC_Logger();
         }
 
-        if ($this->settings['logging_enabled']) {
+        if ($this->settings['logging_enabled'] == 'yes') {
             $this->logger->add('postmates', $message);
         }
 

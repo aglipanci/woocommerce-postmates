@@ -106,7 +106,6 @@ return array(
         'description' => __('The event that the Delivery should be submitted to Postmates to start the delivery.', 'postmates-wc'),
         'default'     => '',
         'options'     => array(
-            'manual'     => _x('I will handle this manually', 'postmates-wc'),
             'pending'    => _x('Pending Payment', 'postmates-wc'),
             'processing' => _x('Processing', 'postmates-wc'),
             'on-hold'    => _x('On Hold', 'postmates-wc'),
@@ -120,7 +119,6 @@ return array(
         'description' => __('The event that the Delivery should be canceled. This will work only when the pickup has not started yet.', 'postmates-wc'),
         'default'     => '',
         'options'     => array(
-            'manual'    => _x('I will handle this manually\'', 'postmates-wc'),
             'cancelled' => _x('Cancelled', 'postmates-wc'),
             'refunded'  => _x('Refunded', 'postmates-wc'),
             'failed'    => _x('Failed', 'postmates-wc')

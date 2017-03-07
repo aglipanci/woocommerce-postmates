@@ -140,10 +140,9 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
      */
     private function environment_check()
     {
-
-        if ((!$this->customer_id || !$this->api_key) && $this->enabled == 'yes') {
+        if ((!$this->customer_id || !$this->api_key || !$this->pickup_name || !$this->pickup_address || !$this->pickup_phone_number ) && $this->enabled == 'yes') {
             echo '<div class="error">
-				<p>' . __('Postmates is enabled, but the customer_id and api_key has not been set.', 'wf-shipping-dhl') . '</p>
+				<p>' . __('Postmates is enabled, but one of the fields customer_id, api_key, pickup_name, pickup_address or pickup_phone_number has not been set.', 'wf-shipping-dhl') . '</p>
 			</div>';
         }
 
@@ -154,6 +153,5 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
         }
 
     }
-
 
 }
