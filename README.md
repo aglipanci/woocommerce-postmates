@@ -1,1 +1,1 @@
-# woocommerce-postmates
+# woocommerce-postmates-shipping

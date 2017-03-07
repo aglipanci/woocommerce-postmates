@@ -4,10 +4,17 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-
+/**
+ * Adds Postmates Shipping funcitonality
+ *
+ * Class WC_Shipping_Postmates
+ */
 class WC_Shipping_Postmates extends WC_Shipping_Method
 {
 
+    /**
+     * WC_Shipping_Postmates constructor.
+     */
     public function __construct()
     {
 
@@ -15,10 +22,12 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
         $this->method_title = __('Postmates', 'postmates-wc');
         $this->method_description = __('Postmates Shipping Support', 'postmates-wc');
         $this->init();
-        $this->hooks();
 
     }
 
+    /**
+     * Initialize Plugin settings
+     */
     private function init()
     {
 
@@ -51,6 +60,9 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 
     }
 
+    /**
+     * Form Fields
+     */
     public function init_form_fields()
     {
 
@@ -58,21 +70,20 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 
     }
 
-    private function hooks()
-    {
-        add_action('woocommerce_order_status_changed', [$this, 'handle_order_status_change']);
-    }
-
-
+    /**
+     * Main function to calculate shipping based on Postmates or Flat price
+     *
+     * @param array $package
+     */
     public function calculate_shipping($package = [])
     {
 
         if (isset($this->flat_rate) && !empty($this->flat_rate) && is_numeric($this->flat_rate)) {
 
             $rate = array(
-                'id' => $this->id,
-                'label' => $this->title,
-                'cost' => $this->flat_rate,
+                'id'       => $this->id,
+                'label'    => $this->title,
+                'cost'     => $this->flat_rate,
                 'calc_tax' => 'box_packing'
             );
 
@@ -98,9 +109,9 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
             if (!is_wp_error($quote)) {
 
                 $rate = array(
-                    'id' => $this->id,
-                    'label' => $this->title,
-                    'cost' => number_format(($quote['fee'] / 100), 2, '.', ' '),
+                    'id'       => $this->id,
+                    'label'    => $this->title,
+                    'cost'     => number_format(($quote['fee'] / 100), 2, '.', ' '),
                     'calc_tax' => 'box_packing'
                 );
 
@@ -112,6 +123,9 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 
     }
 
+    /**
+     * Check if settings are not empty
+     */
     public function admin_options()
     {
         // Check users environment supports this method
@@ -121,12 +135,21 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
         parent::admin_options();
     }
 
+    /**
+     * Show error in case of config missing
+     */
     private function environment_check()
     {
 
         if ((!$this->customer_id || !$this->api_key) && $this->enabled == 'yes') {
             echo '<div class="error">
 				<p>' . __('Postmates is enabled, but the customer_id and api_key has not been set.', 'wf-shipping-dhl') . '</p>
+			</div>';
+        }
+
+        if (!$this->signature_secret_key && $this->enabled == 'yes') {
+            echo '<div class="error">
+				<p>' . __('Postmates is enabled, but the signature_secret_key is missing. Webhooks wont work until this is set.', 'wf-shipping-dhl') . '</p>
 			</div>';
         }
 
