@@ -8,11 +8,11 @@ Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-WooCommerce Postmates Integration enables stress-free on-demand delivery for your WooCommerce Store.
+Postmates Integration for WooCommerce enables stress-free on-demand delivery for your WooCommerce Store.
 
 == Description ==
 
-Using the WooCommerce Postmates Integration plugin, you will be available to support on-demand deliveries to your customers.
+Using the Postmates Integration for WooCommerce plugin, you will be available to support on-demand deliveries to your customers.
 
 
 Plugin Features:
