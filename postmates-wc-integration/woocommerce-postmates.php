@@ -1,7 +1,7 @@
 <?php
 /*
-	Plugin Name: WooCommerce Postmates Integration
-	Description:  WooCommerce Postmates Shipping + Delivery Tracking
+	Plugin Name: Postmates Shipping for WooCommerce
+	Description: Postmates Shipping & Delivery Tracking Integration for WooCommerce
 	Version: 1.0.0
 	Author: Agli Pançi
 	Author URI: www.aglipanci.com
