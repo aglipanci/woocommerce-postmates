@@ -1,1 +1,1 @@
-# woocommerce-postmates-shipping
+# Postmates Integration for WooCommerce WP Plugin
