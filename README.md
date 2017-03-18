@@ -40,5 +40,5 @@ Check Postmates Approval Guideless here: https://postmates.com/developer/docs/re
 
 ## PHP API Client Library
 
-[aglipanci/postmates-api](https://raw.githubusercontent.com/aglipanci/postmates-api)
+[aglipanci/postmates-api](https://github.com/aglipanci/postmates-api)
 
