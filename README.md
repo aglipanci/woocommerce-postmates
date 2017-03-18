@@ -32,3 +32,13 @@ Requirements:
 ## FAQs
 
 Check Postmates Approval Guideless here: https://postmates.com/developer/docs/resources#approval
+
+## Credits
+
+[Agli Panci](https://github.com/aglipanci)
+
+
+## PHP API Client Library
+
+[aglipanci/postmates-api](https://raw.githubusercontent.com/aglipanci/postmates-api)
+
