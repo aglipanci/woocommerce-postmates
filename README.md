@@ -1,5 +1,8 @@
 # WooCommerce Postmates Integration
 
+Download plugin [here](https://wordpress.org/plugins/woo-postmates-integration/).
+
+
 Using the Postmates Integration for WooCommerce plugin, you will be available to support on-demand deliveries to your customers.
 
 
