@@ -14,13 +14,23 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 
     /**
      * WC_Shipping_Postmates constructor.
+     *
+     * @param int $instance_id Shipping method instance ID.
      */
-    public function __construct()
+    public function __construct($instance_id = 0)
     {
-
         $this->id = 'postmates';
+        $this->instance_id = absint($instance_id);
         $this->method_title = __('Postmates', 'postmates-wc');
         $this->method_description = __('Postmates Shipping Support', 'postmates-wc');
+
+        $this->supports = array(
+            'settings',
+            'shipping-zones',
+            'instance-settings',
+            'instance-settings-modal',
+        );
+
         $this->init();
 
     }
@@ -30,7 +40,6 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
      */
     private function init()
     {
-
         // Load the settings.
         $this->init_form_fields();
         $this->init_settings();
@@ -50,14 +59,13 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
         $this->delivery_submission = $this->get_option('delivery_submission');
         $this->delivery_cancellation = $this->get_option('delivery_cancellation');
 
-        $this->enabled = $this->get_option('enabled');
+        $this->enabled = 'yes';
         $this->debug = $this->get_option('debug');
 
         $this->logging_enabled = $this->get_option('logging_enabled');
 
 
         add_action('woocommerce_update_options_shipping_' . $this->id, [$this, 'process_admin_options']);
-
     }
 
     /**
@@ -65,9 +73,8 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
      */
     public function init_form_fields()
     {
-
+        $this->instance_form_fields = include('data-postmates-instance-settings.php');
         $this->form_fields = include('data-postmates-settings.php');
-
     }
 
     /**
@@ -77,16 +84,20 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
      */
     public function calculate_shipping($package = [])
     {
+        $instance_settings = array_filter($this->instance_settings, function ($option_value) {
+            return $option_value !== '';
+        });
+
+        $instance_settings = array_merge($instance_settings, $this->settings);
 
         if (isset($this->flat_rate) && !empty($this->flat_rate) && is_numeric($this->flat_rate)) {
 
             $rate = array(
-                'id'       => $this->id,
-                'label'    => $this->title,
-                'cost'     => $this->flat_rate,
+                'id' => $this->id,
+                'label' => $this->title,
+                'cost' => $this->flat_rate,
                 'calc_tax' => 'box_packing'
             );
-
 
             $this->add_rate($rate);
 
@@ -94,24 +105,33 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 
             if (empty($package['destination']['address']) || empty($package['destination']['city']) || empty($package['destination']['state']) || empty($package['destination']['postcode'])) {
 
+                $rate = array(
+                    'id' => $this->id,
+                    'label' => $this->title,
+                    'cost' => 0,
+                    'calc_tax' => 'box_packing'
+                );
+
+                $this->add_rate($rate);
+
                 return wc_postmates()->debug('Full address is missing so the delivery cost cannot calculated.');
 
             }
 
             $dropoff_address = $package['destination']['address'] . ', ' . $package['destination']['city'] . ', ' . $package['destination']['state'] . ' ' . $package['destination']['postcode'];
 
-            wc_postmates()->debug('Requesting quote. Pickup address: ' . $this->get_option('pickup_address') . '. Dropoff address: ' . $dropoff_address);
+            wc_postmates()->debug('Requesting quote. Pickup address: ' . $instance_settings['pickup_address'] . '. Dropoff address: ' . $dropoff_address);
 
-            $quote = wc_postmates()->api()->getQuote($this->get_option('pickup_address'), $dropoff_address);
+            $quote = wc_postmates()->api()->getQuote($instance_settings['pickup_address'], $dropoff_address);
 
             wc_postmates()->debug('Request response: ' . print_r($quote, true));
 
             if (!is_wp_error($quote)) {
 
                 $rate = array(
-                    'id'       => $this->id,
-                    'label'    => $this->title,
-                    'cost'     => number_format(($quote['fee'] / 100), 2, '.', ' '),
+                    'id' => $this->id,
+                    'label' => $this->title,
+                    'cost' => number_format(($quote['fee'] / 100), 2, '.', ' '),
                     'calc_tax' => 'box_packing'
                 );
 
@@ -151,7 +171,6 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 				<p>' . __('Postmates is enabled, but the signature_secret_key is missing. Webhooks wont work until this is set.', 'wf-shipping-dhl') . '</p>
 			</div>';
         }
-
     }
 
 }

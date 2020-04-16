@@ -31,12 +31,6 @@ $delivery_cancellation_statuses = array_filter(wc_get_order_statuses(), function
  * Array of settings
  */
 return array(
-    'enabled'                 => array(
-        'title'   => __('Postmates Shippping', 'postmates-wc'),
-        'type'    => 'checkbox',
-        'label'   => __('Enable', 'postmates-wc'),
-        'default' => 'no'
-    ),
     'title'                   => array(
         'title'       => __('Method Title', 'postmates-wc'),
         'type'        => 'text',

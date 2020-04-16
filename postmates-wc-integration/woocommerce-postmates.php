@@ -105,7 +105,7 @@ class WC_Postmates
      */
     public function postmates_woocommerce_shipping_methods($methods)
     {
-        $methods[] = 'WC_Shipping_Postmates';
+        $methods['postmates'] = 'WC_Shipping_Postmates';
         return $methods;
     }
 
