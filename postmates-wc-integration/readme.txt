@@ -23,13 +23,8 @@ Plugin Features:
 - Custom pickup notes for the courier.
 - Backend delivery status on orders page
 - Email admin in case of issues with the delivery submission.
-- Etc.
-
-Coming soon:
-
-- Manual delivery submission from the backend
-- User Email (currently can be handled using 'postmate_status_update' action)
-
+- Shipping zones support
+- Multiple Addresses support
 
 == Installation ==
 
@@ -58,6 +53,9 @@ Check Postmates Approval Guide here: https://postmates.com/developer/docs/resour
 4. Frontend Order View.
 
 == Changelog ==
+
+= 1.2.0 =
+Adding support for multiple addresses.
 
 = 1.1.0 =
 Adding Shipping Zone support.

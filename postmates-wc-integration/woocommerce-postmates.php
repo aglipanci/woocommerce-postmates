@@ -2,7 +2,7 @@
 /*
 	Plugin Name: Postmates Shipping for WooCommerce
 	Description: Postmates Shipping & Delivery Tracking Integration for WooCommerce
-	Version: 1.0.0
+	Version: 1.2.0
 	Author: Agli Pançi
 	Author URI: www.aglipanci.com
 */
@@ -118,83 +118,94 @@ class WC_Postmates
     {
         $order = new WC_Order($order_id);
 
-        if ($order->status == $this->settings['delivery_submission']) {
+        foreach ($order->get_items('shipping') as $item_id => $order_item_shipping) {
 
-            $delivery_id = get_post_meta($order_id, 'postmates_delivery_id', true);
+            if ($order_item_shipping->get_method_id() === 'postmates') {
 
-            if (!$delivery_id) {
+                $shipping_method_instance_id = $order_item_shipping->get_instance_id();
+                $postmates_shipping = new WC_Shipping_Postmates($shipping_method_instance_id);
+                $postmates_shipping_settings = $postmates_shipping->get_merged_instance_settings();
 
-                $dropoff_address = $order->shipping_address_1 . ', ' . $order->shipping_city . ', ' . $order->shipping_state . ' ' . $order->shipping_postcode;
+                if ($order->get_status() == $postmates_shipping_settings['delivery_submission']) {
 
-                $params = [
-                    'manifest'             => 'Order Delivery',
-                    'pickup_business_name' => $this->settings['pickup_business_name'],
-                    'pickup_name'          => $this->settings['pickup_name'],
-                    'pickup_address'       => $this->settings['pickup_address'],
-                    'pickup_phone_number'  => wc_postmates()->api()->formatPhoneNumber($this->settings['pickup_phone_number']),
-                    'dropoff_name'         => $order->shipping_first_name . ' ' . $order->shipping_last_name,
-                    'dropoff_address'      => $dropoff_address,
-                    'dropoff_phone_number' => wc_postmates()->api()->formatPhoneNumber($order->billing_phone),
-                ];
+                    $delivery_id = get_post_meta($order_id, 'postmates_delivery_id', true);
 
-                if (!empty($order->shipping_company)) {
+                    if (!$delivery_id) {
 
-                    $params['dropoff_business_name'] = $order->shipping_company;
+                        $dropoff_address = $order->get_shipping_address_1() . ', ' . $order->get_shipping_city() . ', ' . $order->get_shipping_state() . ' ' . $order->get_shipping_postcode();
+
+                        $params = [
+                            'manifest'             => 'Order Delivery. Order #' . $order->get_order_number(),
+                            'pickup_business_name' => $postmates_shipping_settings['pickup_business_name'],
+                            'pickup_name'          => $postmates_shipping_settings['pickup_name'],
+                            'pickup_address'       => $postmates_shipping_settings['pickup_address'],
+                            'pickup_phone_number'  => wc_postmates()->api()->formatPhoneNumber($postmates_shipping_settings['pickup_phone_number']),
+                            'dropoff_name'         => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+                            'dropoff_address'      => $dropoff_address,
+                            'dropoff_phone_number' => wc_postmates()->api()->formatPhoneNumber($order->get_billing_phone()),
+                        ];
+
+                        if (!empty($order->get_shipping_company())) {
+
+                            $params['dropoff_business_name'] = $order->get_shipping_company();
+
+                        }
+
+                        if (!empty($order->get_shipping_address_2())) {
+
+                            $params['dropoff_notes'] = $order->get_shipping_address_2();
+
+                        }
+
+                        $delivery = wc_postmates()->api()->submitDeliveryRequest($params);
+
+                        wc_postmates()->debug('Delivery submitted with this parameters: ' . print_r($params, true));
+                        wc_postmates()->debug('Postmates response: ' . print_r($delivery, true));
+
+                        if (!is_wp_error($delivery)) {
+
+                            update_post_meta($order_id, 'postmates_delivery_id', $delivery['id']);
+                            update_post_meta($order_id, 'postmates_delivery_status', 'sent');
+
+                        } else {
+
+                            wp_mail(get_option('admin_email'), 'Postmates Delivery Failed', print_r($delivery, true));
+
+                        }
+
+                    }
 
                 }
 
-                if (!empty($order->shipping_address_2)) {
+                if ($order->get_status() == $postmates_shipping_settings['delivery_cancellation']) {
 
-                    $params['dropoff_notes'] = $order->shipping_address_2;
+                    $delivery_id = get_post_meta($order_id, 'postmates_delivery_id', true);
 
-                }
+                    if ($delivery_id) {
 
-                $delivery = wc_postmates()->api()->submitDeliveryRequest($params);
+                        $delivery_cancellation = wc_postmates()->api()->cancelDelivery($delivery_id);
 
-                wc_postmates()->debug('Delivery submitted with this parameters: ' . print_r($params, true));
-                wc_postmates()->debug('Postmates response: ' . print_r($delivery, true));
+                        wc_postmates()->debug('Canceling Delivery with ID: ' . $delivery_id);
+                        wc_postmates()->debug('Delivery cancellation response: '. print_r($delivery_cancellation, true));
 
-                if (!is_wp_error($delivery)) {
+                        if (!is_wp_error($delivery_cancellation)) {
 
-                    update_post_meta($order_id, 'postmates_delivery_id', $delivery['id']);
-                    update_post_meta($order_id, 'postmates_delivery_status', 'sent');
+                            update_post_meta($order_id, 'postmates_delivery_status', $delivery_cancellation['status']);
 
-                } else {
+                        } else {
 
-                    wp_mail(get_option('admin_email'), 'Postmates Delivery Failed', print_r($delivery, true));
+                            wp_mail(get_option('admin_email'), 'Postmates Delivery Cancellation Failed', print_r($delivery_cancellation, true));
+
+                        }
+
+                    }
 
                 }
 
             }
 
-        }
-
-        if ($order->status == $this->settings['delivery_cancellation']) {
-
-            $delivery_id = get_post_meta($order_id, 'postmates_delivery_id', true);
-
-            if ($delivery_id) {
-
-                $delivery_cancellation = wc_postmates()->api()->cancelDelivery($delivery_id);
-
-                wc_postmates()->debug('Canceling Delivery with ID: ' . $delivery_id);
-                wc_postmates()->debug('Delivery cancellation response: '. print_r($delivery_cancellation, true));
-
-                if (!is_wp_error($delivery_cancellation)) {
-
-                    update_post_meta($order_id, 'postmates_delivery_status', $delivery_cancellation['status']);
-
-                } else {
-
-                    wp_mail(get_option('admin_email'), 'Postmates Delivery Cancellation Failed', print_r($delivery_cancellation, true));
-
-                }
-
-            }
 
         }
-
-
     }
 
     /**
@@ -273,7 +284,7 @@ class WC_Postmates
 
                     $this->debug('Found order WC' . print_r($order, true));
 
-                    update_post_meta($order->id, 'postmates_delivery_status', $request['data']['status']);
+                    update_post_meta($order->get_id(), 'postmates_delivery_status', $request['data']['status']);
                     do_action('postmate_status_update', $order, $request);
 
                 }
@@ -292,7 +303,7 @@ class WC_Postmates
     /**
      * Show shipping information on order view
      *
-     * @param $order
+     * @param $order WC_Order
      */
     public function show_delivery_details_on_order($order)
     {
@@ -302,7 +313,7 @@ class WC_Postmates
         if ($shipping_method_id !== 'postmates')
             return;
 
-        $delivery_status = get_post_meta($order->id, 'postmates_delivery_status', true);
+        $delivery_status = get_post_meta($order->get_id(), 'postmates_delivery_status', true);
         $text_status = wc_postmates()->api()->getDeliveryStatus($delivery_status);
 
         if (!$text_status) {

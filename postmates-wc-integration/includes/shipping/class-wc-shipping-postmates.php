@@ -84,11 +84,7 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
      */
     public function calculate_shipping($package = [])
     {
-        $instance_settings = array_filter($this->instance_settings, function ($option_value) {
-            return $option_value !== '';
-        });
-
-        $instance_settings = array_merge($instance_settings, $this->settings);
+        $instance_settings = $this->get_merged_instance_settings();
 
         if (isset($this->flat_rate) && !empty($this->flat_rate) && is_numeric($this->flat_rate)) {
 
@@ -171,6 +167,20 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 				<p>' . __('Postmates is enabled, but the signature_secret_key is missing. Webhooks wont work until this is set.', 'wf-shipping-dhl') . '</p>
 			</div>';
         }
+    }
+
+    /**
+     * Get instance settings merged with default settings.
+     *
+     * @return array
+     */
+    public function get_merged_instance_settings()
+    {
+        $instance_settings = array_filter($this->instance_settings, function ($option_value) {
+            return $option_value !== '';
+        });
+
+        return array_merge($this->settings, $instance_settings);
     }
 
 }
