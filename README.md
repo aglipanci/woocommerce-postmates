@@ -12,15 +12,11 @@ Plugin Features:
 - Delivery status on order page.
 - Custom shipping method title.
 - Custom pickup notes for the courier.
-- Backend delivery dtatus on orders page
-- Email admin in case of issies with the delivery submission.
-- Etc.
-
-Comming soon:
-
-- Manual delivery submission from the backend
-- User Email (currently can be hanlded using 'postmate_status_update' action)
-
+- Backend delivery status on orders page
+- Email admin in case of issues with the delivery submission.
+- Shipping zones support
+- Multiple Addresses support
+- Automatically tip driver when the delivery is completed.
 
 ## Installation 
 

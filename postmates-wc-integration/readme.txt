@@ -25,6 +25,7 @@ Plugin Features:
 - Email admin in case of issues with the delivery submission.
 - Shipping zones support
 - Multiple Addresses support
+- Automatically tip driver when the delivery is completed.
 
 == Installation ==
 
@@ -53,6 +54,9 @@ Check Postmates Approval Guide here: https://postmates.com/developer/docs/resour
 4. Frontend Order View.
 
 == Changelog ==
+
+= 1.3.0 =
+Adding support to automatically add a tip after the delivery is completed.
 
 = 1.2.0 =
 Adding support for multiple addresses.

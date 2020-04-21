@@ -58,9 +58,16 @@ return array(
         'desc_tip'    => true
     ),
     'flat_rate'               => array(
-        'title'       => __('Flat Rate', 'postmates-wc'),
-        'type'        => 'text',
-        'description' => __('You can make your customers pay a flat rate for the deliveries.', 'postmates-wc'),
+        'title'       => __('Flat Rate in $ (USD)', 'postmates-wc'),
+        'type'        => 'number',
+        'description' => __('You can make your customers pay a flat rate for the deliveries, no matter what you pay to Posmates.', 'postmates-wc'),
+        'default'     => '',
+        'desc_tip'    => true
+    ),
+    'driver_tip'               => array(
+        'title'       => __('Driver Tip in $ (USD)', 'postmates-wc'),
+        'type'        => 'number',
+        'description' => __('You can automatically add a tip after each delivery completion. If left empty or 0 nothing will be applied.', 'postmates-wc'),
         'default'     => '',
         'desc_tip'    => true
     ),

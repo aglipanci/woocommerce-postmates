@@ -2,10 +2,12 @@
 /*
 	Plugin Name: Postmates Shipping for WooCommerce
 	Description: Postmates Shipping & Delivery Tracking Integration for WooCommerce
-	Version: 1.2.0
+	Version: 1.3.0
 	Author: Agli Pançi
 	Author URI: www.aglipanci.com
 */
+
+use Postmates\Resources\Delivery;
 
 class WC_Postmates
 {
@@ -60,19 +62,20 @@ class WC_Postmates
      */
     private function hooks()
     {
-        add_action('woocommerce_shipping_init', [$this, 'postmates_woocommerce_shipping_init']);
-        add_filter('woocommerce_shipping_methods', [$this, 'postmates_woocommerce_shipping_methods']);
+        add_action('woocommerce_shipping_init', array($this, 'postmates_woocommerce_shipping_init'));
+        add_filter('woocommerce_shipping_methods', array($this, 'postmates_woocommerce_shipping_methods'));
 
-        add_action('woocommerce_thankyou', [$this, 'handle_order_status_change']);
-        add_action('woocommerce_order_status_changed', [$this, 'handle_order_status_change']);
+        add_action('woocommerce_thankyou', array($this, 'handle_order_status_change'));
+        add_action('woocommerce_order_status_changed', array($this, 'handle_order_status_change'));
 
-        add_action('template_redirect', [$this, 'handle_postmates_webooks']);
+        add_action('template_redirect', array($this, 'handle_postmates_webooks'));
 
-        add_filter('manage_edit-shop_order_columns', [$this, 'add_postmates_delivery_column']);
+        add_filter('manage_edit-shop_order_columns', array($this, 'add_postmates_delivery_column'));
         add_action('manage_shop_order_posts_custom_column', array($this, 'delivery_status_on_backend'), 10, 2);
 
         add_action('woocommerce_order_details_after_order_table', array($this, 'show_delivery_details_on_order'), 20);
 
+        add_action('postmate_status_update', array($this, 'add_tip_to_driver'));
     }
 
     /**
@@ -307,7 +310,8 @@ class WC_Postmates
      */
     public function show_delivery_details_on_order($order)
     {
-        $shipping_method = @array_shift($order->get_shipping_methods());
+        $order_shipping_methods = $order->get_shipping_methods();
+        $shipping_method = @array_shift($order_shipping_methods);
         $shipping_method_id = $shipping_method['method_id'];
 
         if ($shipping_method_id !== 'postmates')
@@ -383,6 +387,21 @@ class WC_Postmates
 
     }
 
+    /**
+     * @param WC_Order $order
+     * @param array $postmates_hook_request
+     */
+    public function add_tip_to_driver(WC_Order $order, array $postmates_hook_request)
+    {
+        if ($postmates_hook_request['data']['status'] === Delivery::STATUS_DELIVERED) {
+            $driver_tip_in_usd = (int) $this->settings['driver_tip'];
+
+            if ($driver_tip_in_usd > 0) {
+                $response = $this->api()->addTip($postmates_hook_request['delivery_id'], $driver_tip_in_usd);
+                $this->debug('Driver Tip Response' . print_r($response, true));
+            }
+        }
+    }
 
 }
 

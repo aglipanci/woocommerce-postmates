@@ -186,4 +186,27 @@ class Postmates_API
 
     }
 
+    /**
+     * Cancel a delivery by ID
+     *
+     * @param $delivery_id
+     * @param integer $tip_in_usd
+     * @return mixed|WP_Error
+     */
+    public function addTip($delivery_id, $tip_in_usd)
+    {
+        $tip_in_cents = $tip_in_usd * 100;
+
+        try {
+
+            $delivery = new Delivery($this->client);
+            return $delivery->addTip($delivery_id, $tip_in_cents);
+
+        } catch (PostmatesException $e) {
+
+            return new WP_Error('postmate_error', $e->getMessage(), $e->getInvalidParams());
+
+        }
+    }
+
 }
