@@ -2,7 +2,7 @@
 /*
 	Plugin Name: Postmates Shipping for WooCommerce
 	Description: Postmates Shipping & Delivery Tracking Integration for WooCommerce
-	Version: 1.3.0
+	Version: 1.4.0
 	Author: Agli Pançi
 	Author URI: www.aglipanci.com
 */
@@ -76,6 +76,9 @@ class WC_Postmates
         add_action('woocommerce_order_details_after_order_table', array($this, 'show_delivery_details_on_order'), 20);
 
         add_action('postmate_status_update', array($this, 'add_tip_to_driver'));
+
+        add_action('woocommerce_product_options_shipping', array($this, 'postmates_product_size'));
+        add_action('woocommerce_process_product_meta', array($this, 'postmates_product_size_save') );
     }
 
     /**
@@ -138,13 +141,13 @@ class WC_Postmates
                         $dropoff_address = $order->get_shipping_address_1() . ', ' . $order->get_shipping_city() . ', ' . $order->get_shipping_state() . ' ' . $order->get_shipping_postcode();
 
                         $params = [
-                            'manifest'             => 'Order Delivery. Order #' . $order->get_order_number(),
+                            'manifest' => 'Order #' . $order->get_order_number(),
                             'pickup_business_name' => $postmates_shipping_settings['pickup_business_name'],
-                            'pickup_name'          => $postmates_shipping_settings['pickup_name'],
-                            'pickup_address'       => $postmates_shipping_settings['pickup_address'],
-                            'pickup_phone_number'  => wc_postmates()->api()->formatPhoneNumber($postmates_shipping_settings['pickup_phone_number']),
-                            'dropoff_name'         => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
-                            'dropoff_address'      => $dropoff_address,
+                            'pickup_name' => $postmates_shipping_settings['pickup_name'],
+                            'pickup_address' => $postmates_shipping_settings['pickup_address'],
+                            'pickup_phone_number' => wc_postmates()->api()->formatPhoneNumber($postmates_shipping_settings['pickup_phone_number']),
+                            'dropoff_name' => $order->get_shipping_first_name() . ' ' . $order->get_shipping_last_name(),
+                            'dropoff_address' => $dropoff_address,
                             'dropoff_phone_number' => wc_postmates()->api()->formatPhoneNumber($order->get_billing_phone()),
                         ];
 
@@ -160,6 +163,27 @@ class WC_Postmates
 
                         }
 
+
+                        if ($this->settings['send_products_to_postmates'] == 'yes') {
+
+                            $manifest_items = [];
+
+                            foreach ($order->get_items() as $order_item) {
+
+                                $product_size = get_post_meta($order_item->get_product_id(), 'postmates_product_size', true);
+
+                                $manifest_items[] = json_encode([
+                                    'name' => $order_item->get_name(),
+                                    'quantity' => (int)$order_item->get_quantity(),
+                                    'size' => $product_size ? $product_size : $postmates_shipping_settings['default_product_size'],
+                                ]);
+                            }
+
+                            $params['manifest_items'] = '[' . implode(',', $manifest_items) . ']';
+                        }
+
+                        $params = apply_filters('postmates_request_params_before_request', $params, $order);
+
                         $delivery = wc_postmates()->api()->submitDeliveryRequest($params);
 
                         wc_postmates()->debug('Delivery submitted with this parameters: ' . print_r($params, true));
@@ -169,6 +193,7 @@ class WC_Postmates
 
                             update_post_meta($order_id, 'postmates_delivery_id', $delivery['id']);
                             update_post_meta($order_id, 'postmates_delivery_status', 'sent');
+                            update_post_meta($order_id, 'postmates_delivery_tracking_url', $delivery['tracking_url']);
 
                         } else {
 
@@ -318,6 +343,7 @@ class WC_Postmates
             return;
 
         $delivery_status = get_post_meta($order->get_id(), 'postmates_delivery_status', true);
+        $delivery_tracking_url = get_post_meta($order->get_id(), 'postmates_delivery_tracking_url', true);
         $text_status = wc_postmates()->api()->getDeliveryStatus($delivery_status);
 
         if (!$text_status) {
@@ -336,12 +362,16 @@ class WC_Postmates
                 <th>Shipping method:</th>
                 <td><?php echo $shipping_method['name']; ?></td>
             </tr>
-
             <tr>
                 <th>Delivery status:</th>
                 <td><?php echo $text_status; ?></td>
             </tr>
-
+            <?php if ($delivery_tracking_url): ?>
+                <tr>
+                    <th>Delivery Tracking</th>
+                    <td><a href="<?php echo $delivery_tracking_url; ?>" target="_blank">Real-Time Tracking</a></td>
+                </tr>
+            <?php endif; ?>
             </tbody>
         </table>
 
@@ -400,6 +430,49 @@ class WC_Postmates
                 $response = $this->api()->addTip($postmates_hook_request['delivery_id'], $driver_tip_in_usd);
                 $this->debug('Driver Tip Response' . print_r($response, true));
             }
+        }
+    }
+
+    /**
+     * Defines the product size dropdown on the shipping section of the product.
+     */
+    public function postmates_product_size()
+    {
+        global $post;
+
+        echo '<div class="options_group">';
+
+        woocommerce_wp_select(
+            array(
+                'id'            => 'postmates_product_size',
+                'value'         => get_post_meta($post->ID, 'postmates_product_size'),
+                'wrapper_class' => '',
+                'label'         => __( 'Postmates Product Size', 'postmates-wc' ),
+                'options'       => array(
+                    'small'     => __( 'Small - You can carry it with one hand.', 'postmates-wc' ),
+                    'medium'  => __( 'Medium - You need a tote bag to carry it.', 'postmates-wc' ),
+                    'large' => __( 'Large - You need two hands to carry', 'postmates-wc' ),
+                    'xlarge' => __( 'X-Large - You will need to make multiple trips to/from a vehicle to transport.', 'postmates-wc' ),
+                ),
+                'desc_tip'      => true,
+                'description'   => __( 'Defines the product size according to Postmates sizing conventions.', 'postmates-wc' ),
+            )
+        );
+
+        echo '</div>';
+    }
+
+    /**
+     * Handle the save functionality of the shipping product size.
+     *
+     * @param $id
+     */
+    function postmates_product_size_save( $id )
+    {
+        if (!empty($_POST['postmates_product_size'])) {
+            update_post_meta($id, 'postmates_product_size', $_POST['postmates_product_size']);
+        } else {
+            delete_post_meta($id, 'postmates_product_size');
         }
     }
 

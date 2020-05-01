@@ -26,6 +26,7 @@ Plugin Features:
 - Shipping zones support
 - Multiple Addresses support
 - Automatically tip driver when the delivery is completed.
+- Real-Time Delivery Tracking URL
 
 == Installation ==
 
@@ -54,6 +55,10 @@ Check Postmates Approval Guide here: https://postmates.com/developer/docs/resour
 4. Frontend Order View.
 
 == Changelog ==
+
+= 1.4.0 =
+Added Tracking URL on the order screen
+Added possibility to send the order products to Postmates
 
 = 1.3.0 =
 Adding support to automatically add a tip after the delivery is completed.

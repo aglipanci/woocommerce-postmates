@@ -176,7 +176,24 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
      */
     public function get_merged_instance_settings()
     {
-        $instance_settings = array_filter($this->instance_settings, function ($option_value) {
+        $instance_settings = $this->instance_settings;
+
+        /**
+         * General Settings should not have default values from instance.
+         */
+        $keys_not_to_be_merged = [
+            'delivery_submission',
+            'delivery_cancellation',
+            'debug',
+            'send_products_to_postmates',
+            'default_product_size',
+            'notify_admin_on_failure',
+            'logging_enabled',
+        ];
+
+        $instance_settings = array_diff_key($instance_settings, array_flip($keys_not_to_be_merged));
+
+        $instance_settings = array_filter($instance_settings, function ($option_value) {
             return $option_value !== '';
         });
 
