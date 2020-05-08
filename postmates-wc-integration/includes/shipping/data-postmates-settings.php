@@ -64,10 +64,36 @@ return array(
         'default' => '',
         'desc_tip' => true
     ),
+    'driver_tip_method' => array(
+        'title' => __('Driver Tip Method', 'postmates-wc'),
+        'type' => 'select',
+        'description' => __('You can tip the driver after the delivery is completed. The tip can be fixed or a percentage based on the order total.', 'postmates-wc'),
+        'default' => 'fixed',
+        'options' => array(
+            'fixed' => _x('Fixed', 'postmates-wc'),
+            'percentage' => _x('Percentage', 'postmates-wc'),
+        ),
+        'desc_tip' => true
+    ),
+    'driver_tip_charge_customer' => array(
+        'title' => __('Charge the tip to the customer.', 'postmates-wc'),
+        'label' => __('Enable', 'postmates-wc'),
+        'type' => 'checkbox',
+        'default' => 'no',
+        'desc_tip' => true,
+        'description' => __('When enabled the tip charge (fixed or percentage) will be added on top of the delivery quote or flat fee and charged to the customer. Otherwise the store will pay the tip.', 'postmates-wc')
+    ),
     'driver_tip' => array(
         'title' => __('Driver Tip in $ (USD)', 'postmates-wc'),
         'type' => 'number',
         'description' => __('You can automatically add a tip after each delivery completion. If left empty or 0 nothing will be applied.', 'postmates-wc'),
+        'default' => '',
+        'desc_tip' => true,
+    ),
+    'driver_tip_percentage' => array(
+        'title' => __('Driver Tip in % of order total', 'postmates-wc'),
+        'type' => 'number',
+        'description' => __('% of the order that should be applied as a tip. If left empty or 0 nothing will be applied.', 'postmates-wc'),
         'default' => '',
         'desc_tip' => true
     ),
@@ -168,5 +194,5 @@ return array(
         'default' => 'no',
         'desc_tip' => true,
         'description' => __('Enable Logging to log Postmates actions to wc-logs dir.', 'postmates-wc')
-    )
+    ),
 );

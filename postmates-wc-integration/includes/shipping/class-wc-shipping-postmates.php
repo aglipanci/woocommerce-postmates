@@ -55,7 +55,6 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
         $this->pickup_phone_number = $this->get_option('pickup_phone_number');
         $this->pickup_notes = $this->get_option('pickup_notes');
 
-        $this->flat_rate = $this->get_option('flat_rate');
         $this->delivery_submission = $this->get_option('delivery_submission');
         $this->delivery_cancellation = $this->get_option('delivery_cancellation');
 
@@ -86,12 +85,30 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
     {
         $instance_settings = $this->get_merged_instance_settings();
 
-        if (isset($this->flat_rate) && !empty($this->flat_rate) && is_numeric($this->flat_rate)) {
+        $tip_to_charge_customer = 0;
+
+        if ($instance_settings['driver_tip_charge_customer'] === 'yes') {
+            if ($instance_settings['driver_tip_method'] === 'fixed') {
+                $tip_to_charge_customer = (int)$instance_settings['driver_tip'];
+            }
+
+            if ($instance_settings['driver_tip_method'] === 'percentage') {
+                $percentage_tip_to_charge_customer = (int)$instance_settings['driver_tip_percentage'];
+                $card_total = WC()->cart->get_cart_contents_total();
+                $tip_to_charge_customer = ($card_total * $percentage_tip_to_charge_customer) / 100;
+            }
+        }
+
+        wc_postmates()->debug('Tip amount of ' . $tip_to_charge_customer . ' USD will be charged to the customer.');
+
+        if (!empty($instance_settings['flat_rate']) && is_numeric($instance_settings['flat_rate'])) {
+
+            $shippingCost = $instance_settings['flat_rate'] + $tip_to_charge_customer;
 
             $rate = array(
                 'id' => $this->id,
                 'label' => $this->title,
-                'cost' => $this->flat_rate,
+                'cost' => $shippingCost,
                 'calc_tax' => 'box_packing'
             );
 
@@ -124,10 +141,12 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 
             if (!is_wp_error($quote)) {
 
+                $shippingCost = number_format(($quote['fee'] / 100) + $tip_to_charge_customer, 2, '.', ' ');
+
                 $rate = array(
                     'id' => $this->id,
                     'label' => $this->title,
-                    'cost' => number_format(($quote['fee'] / 100), 2, '.', ' '),
+                    'cost' => $shippingCost,
                     'calc_tax' => 'box_packing'
                 );
 

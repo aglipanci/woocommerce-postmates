@@ -79,6 +79,8 @@ class WC_Postmates
 
         add_action('woocommerce_product_options_shipping', array($this, 'postmates_product_size'));
         add_action('woocommerce_process_product_meta', array($this, 'postmates_product_size_save') );
+
+        add_action( 'admin_enqueue_scripts', array($this, 'enqueue_assets') );
     }
 
     /**
@@ -426,6 +428,16 @@ class WC_Postmates
         if ($postmates_hook_request['data']['status'] === Delivery::STATUS_DELIVERED) {
             $driver_tip_in_usd = (int) $this->settings['driver_tip'];
 
+            if ($this->settings['driver_tip_method'] === 'fixed') {
+                $driver_tip_in_usd = (int)$this->settings['driver_tip'];
+            }
+
+            if ($this->settings['driver_tip_method'] === 'percentage') {
+                $percentage_tip_to_charge_customer = (int)$this->settings['driver_tip_percentage'];
+                $card_total = $order->get_subtotal();
+                $driver_tip_in_usd = ($card_total * $percentage_tip_to_charge_customer) / 100;
+            }
+
             if ($driver_tip_in_usd > 0) {
                 $response = $this->api()->addTip($postmates_hook_request['delivery_id'], $driver_tip_in_usd);
                 $this->debug('Driver Tip Response' . print_r($response, true));
@@ -467,13 +479,25 @@ class WC_Postmates
      *
      * @param $id
      */
-    function postmates_product_size_save( $id )
+    public function postmates_product_size_save( $id )
     {
         if (!empty($_POST['postmates_product_size'])) {
             update_post_meta($id, 'postmates_product_size', $_POST['postmates_product_size']);
         } else {
             delete_post_meta($id, 'postmates_product_size');
         }
+    }
+
+    /**
+     * Plugin assets
+     */
+    public function enqueue_assets()
+    {
+        wp_enqueue_script(
+            'woo-postmates-js',
+            plugins_url( '/assets/js/postmates.js', __FILE__ ),
+            array('jquery'),
+            'v1.0.0');
     }
 
 }
