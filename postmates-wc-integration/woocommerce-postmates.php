@@ -75,7 +75,7 @@ class WC_Postmates
 
         add_action('woocommerce_order_details_after_order_table', array($this, 'show_delivery_details_on_order'), 20);
 
-        add_action('postmate_status_update', array($this, 'add_tip_to_driver'));
+        add_action('postmate_status_update', array($this, 'add_tip_to_driver'), 10, 2);
 
         add_action('woocommerce_product_options_shipping', array($this, 'postmates_product_size'));
         add_action('woocommerce_process_product_meta', array($this, 'postmates_product_size_save') );
