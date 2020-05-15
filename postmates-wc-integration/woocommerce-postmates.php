@@ -5,6 +5,7 @@
 	Version: 1.4.0
 	Author: Agli Pançi
 	Author URI: www.aglipanci.com
+    WC tested up to: 4.1.0
 */
 
 use Postmates\Resources\Delivery;
