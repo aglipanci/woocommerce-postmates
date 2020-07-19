@@ -2,7 +2,7 @@
 /*
 	Plugin Name: Postmates Shipping for WooCommerce
 	Description: Postmates Shipping & Delivery Tracking Integration for WooCommerce
-	Version: 1.4.0
+	Version: 1.4.1
 	Author: Agli Pançi
 	Author URI: www.aglipanci.com
     WC tested up to: 4.1.0

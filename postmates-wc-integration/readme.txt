@@ -56,6 +56,10 @@ Check Postmates Approval Guide here: https://postmates.com/developer/docs/resour
 
 == Changelog ==
 
+= 1.4.1 =
+Added postmates_shipping_cost filter to filter the delivery fee.
+Added support for custom WooCommerce order statuses.
+
 = 1.4.0 =
 Added Tracking URL on the order screen
 Added possibility to send the order products to Postmates

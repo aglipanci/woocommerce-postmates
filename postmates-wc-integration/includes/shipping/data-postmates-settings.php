@@ -7,25 +7,14 @@ if (!defined('ABSPATH')) {
 /*
  * WooCommerce Order Statuses to be used in settings
  */
-$delivery_submission_statuses = array_filter(wc_get_order_statuses(), function ($el) {
+$delivery_submission_statuses = [];
+$delivery_cancellation_statuses = [];
 
-    if (in_array($el, ['wc-cancelled', 'wc-refunded', 'wc-failed'])) {
-        return false;
-    }
-
-    return $el;
-
-}, ARRAY_FILTER_USE_KEY);
-
-$delivery_cancellation_statuses = array_filter(wc_get_order_statuses(), function ($el) {
-
-    if (in_array($el, ['wc-cancelled', 'wc-refunded', 'wc-failed'])) {
-        return $el;
-    }
-
-    return false;
-
-}, ARRAY_FILTER_USE_KEY);
+foreach (wc_get_order_statuses() as $order_status_key => $order_status_label) {
+    $new_order_status_key = str_replace('wc-', '', $order_status_key);
+    $delivery_submission_statuses[$new_order_status_key] = $order_status_label;
+    $delivery_cancellation_statuses[$new_order_status_key] = $order_status_label;
+}
 
 /**
  * Array of settings
@@ -132,12 +121,7 @@ return array(
         'type' => 'select',
         'description' => __('The event that the Delivery should be submitted to Postmates to start the delivery.', 'postmates-wc'),
         'default' => '',
-        'options' => array(
-            'pending' => _x('Pending Payment', 'postmates-wc'),
-            'processing' => _x('Processing', 'postmates-wc'),
-            'on-hold' => _x('On Hold', 'postmates-wc'),
-            'completed' => _x('Completed', 'postmates-wc')
-        ),
+        'options' => $delivery_submission_statuses,
         'desc_tip' => true
     ),
     'delivery_cancellation' => array(
@@ -145,11 +129,7 @@ return array(
         'type' => 'select',
         'description' => __('The event that the Delivery should be canceled. This will work only when the pickup has not started yet.', 'postmates-wc'),
         'default' => '',
-        'options' => array(
-            'cancelled' => _x('Cancelled', 'postmates-wc'),
-            'refunded' => _x('Refunded', 'postmates-wc'),
-            'failed' => _x('Failed', 'postmates-wc')
-        ),
+        'options' => $delivery_cancellation_statuses,
         'desc_tip' => true
     ),
     'send_products_to_postmates' => array(

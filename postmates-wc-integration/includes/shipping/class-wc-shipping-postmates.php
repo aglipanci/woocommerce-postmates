@@ -143,6 +143,8 @@ class WC_Shipping_Postmates extends WC_Shipping_Method
 
                 $shippingCost = number_format(($quote['fee'] / 100) + $tip_to_charge_customer, 2, '.', ' ');
 
+                $shippingCost = apply_filters('postmates_shipping_cost', (double) $shippingCost, $quote, $tip_to_charge_customer);
+
                 $rate = array(
                     'id' => $this->id,
                     'label' => $this->title,
